@@ -1207,37 +1207,37 @@ export default function BoothDelight() {
                         </div>
                       </div>
 
-                      {/* Line 2: Opportunity Cost */}
-                      <div className="mt-1">
-                        <span className="text-sm text-green-600 font-medium">
-                          Opportunity: {visitor.opportunityCost || "$0"}
-                        </span>
+                      {/* Line 2: LinkedIn Opportunity */}
+                      <div className="mt-1 flex items-center gap-2">
+                        <span className="text-sm text-gray-900 font-medium">Linked Opportunity:</span>
+                        <div className="flex gap-1">
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            {visitor.id === "1" ? "$0" : visitor.id === "2" ? "$75K" : "$100K"}
+                          </span>
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            {visitor.id === "1" ? "$25K" : visitor.id === "2" ? "$200K" : "$450K"}
+                          </span>
+                        </div>
                       </div>
 
                       {/* Line 3: ABX Indicator */}
-                      <div className="mt-1">
-                        <span className="text-sm text-gray-600">
-                          ABX Indicator:
-                          <span
-                            className={cn(
-                              "ml-1 font-medium",
-                              visitor.abxIndicator === "High"
-                                ? "text-green-600"
-                                : visitor.abxIndicator === "Medium"
-                                  ? "text-yellow-600"
-                                  : visitor.abxIndicator === "Low"
-                                    ? "text-red-600"
-                                    : "text-gray-500",
-                            )}
-                          >
-                            {visitor.abxIndicator === "High"
-                              ? "+ve"
-                              : visitor.abxIndicator === "Medium"
-                                ? "+ve"
-                                : visitor.abxIndicator === "Low"
-                                  ? "-ve"
-                                  : "Unknown"}
-                          </span>
+                      <div className="mt-2 flex items-center gap-2">
+                        <span className="text-sm text-gray-900 font-medium">ABX Indicator:</span>
+                        <span
+                          className={cn(
+                            "inline-flex items-center px-2 py-1 rounded-full text-xs font-medium",
+                            visitor.abxIndicator === "High" || visitor.abxIndicator === "Medium"
+                              ? "bg-green-100 text-green-800"
+                              : visitor.abxIndicator === "Low"
+                                ? "bg-red-100 text-red-800"
+                                : "bg-gray-100 text-gray-800",
+                          )}
+                        >
+                          {visitor.abxIndicator === "High" || visitor.abxIndicator === "Medium"
+                            ? "Positive"
+                            : visitor.abxIndicator === "Low"
+                              ? "Negative"
+                              : "Unknown"}
                         </span>
                       </div>
 
@@ -1247,15 +1247,15 @@ export default function BoothDelight() {
                         <div className="flex items-center gap-3">
                           {/* Meeting Status */}
                           <Calendar
-                            className={cn("h-4 w-4", visitor.meetingBooked ? "text-green-500" : "text-gray-300")}
+                            className={cn("h-4 w-4", visitor.meetingBooked ? "text-purple-500" : "text-gray-400")}
                           />
 
                           {/* Gift Status */}
-                          <Gift className={cn("h-4 w-4", visitor.giftSent ? "text-green-500" : "text-gray-300")} />
+                          <Gift className={cn("h-4 w-4", visitor.giftSent ? "text-purple-500" : "text-gray-400")} />
 
                           {/* CRM Synced Status */}
                           <RefreshCw
-                            className={cn("h-4 w-4", visitor.crmSynced ? "text-green-500" : "text-gray-300")}
+                            className={cn("h-4 w-4", visitor.crmSynced ? "text-purple-500" : "text-gray-400")}
                           />
                         </div>
 
