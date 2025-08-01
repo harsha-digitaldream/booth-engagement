@@ -164,6 +164,10 @@ export default function BoothDelight() {
   })
   const [isEnriching, setIsEnriching] = useState(false)
   const [enrichingField, setEnrichingField] = useState("")
+  const [showSignals, setShowSignals] = useState(false)
+  const [signalsData, setSignalsData] = useState(null)
+  const [isLoadingSignals, setIsLoadingSignals] = useState(false)
+  const [showContactForm, setShowContactForm] = useState(true)
 
   const generateAvatar = (name) => {
     const names = name.split(" ")
@@ -236,6 +240,10 @@ export default function BoothDelight() {
     setScanningStep("camera")
     setIsScanning(false)
     setScannedLead(null)
+    setShowSignals(false)
+    setSignalsData(null)
+    setIsLoadingSignals(false)
+    setShowContactForm(true)
   }
 
   const simulateCameraScan = () => {
@@ -313,6 +321,33 @@ export default function BoothDelight() {
       default:
         return "text-gray-600 bg-gray-50"
     }
+  }
+
+  const generateSignals = () => {
+    setIsLoadingSignals(true)
+    setShowSignals(true)
+
+    setTimeout(() => {
+      setSignalsData({
+        internal: {
+          score: 78,
+          insights: [
+            "High engagement with security-focused content on company website",
+            "Multiple team members researching cloud security solutions",
+          ],
+          opportunities: ["$45K", "$120K"],
+        },
+        external: {
+          score: 65,
+          insights: [
+            "Company recently posted job openings for DevSecOps engineers",
+            "Mentioned security compliance challenges in recent earnings call",
+          ],
+          opportunities: ["$75K", "$200K"],
+        },
+      })
+      setIsLoadingSignals(false)
+    }, 2000)
   }
 
   return (
@@ -663,264 +698,391 @@ export default function BoothDelight() {
             {/* Contact Form */}
             {(scanningStep === "form" || scanningStep === "enriching" || scanningStep === "complete") && (
               <div className="space-y-4">
+                {/* Contact Information Section - Collapsible */}
                 <div className="border border-gray-200 rounded-lg">
-                  <div className="p-4 bg-gray-50 border-b border-gray-200">
+                  <div
+                    className="p-4 bg-gray-50 border-b border-gray-200 cursor-pointer flex items-center justify-between"
+                    onClick={() => setShowContactForm(!showContactForm)}
+                  >
                     <h3 className="font-medium text-gray-900">Contact Information</h3>
-                  </div>
-
-                  <div className="p-4 space-y-3">
-                    {/* Name */}
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 flex items-center justify-center">
-                        <User className="h-4 w-4 text-gray-500" />
-                      </div>
-                      <div className="flex-1">
-                        <input
-                          type="text"
-                          placeholder="Name"
-                          value={contactForm.name}
-                          onChange={(e) => setContactForm((prev) => ({ ...prev, name: e.target.value }))}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Role */}
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 flex items-center justify-center">
-                        <Briefcase className="h-4 w-4 text-gray-500" />
-                      </div>
-                      <div className="flex-1">
-                        <input
-                          type="text"
-                          placeholder="Role"
-                          value={contactForm.role}
-                          onChange={(e) => setContactForm((prev) => ({ ...prev, role: e.target.value }))}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Email */}
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 flex items-center justify-center relative">
-                        <Mail
-                          className={cn(
-                            "h-4 w-4 transition-all duration-300",
-                            enrichingField === "email"
-                              ? "text-purple-500 animate-pulse"
-                              : contactForm.email
-                                ? "text-purple-500"
-                                : "text-gray-500",
-                          )}
-                        />
-                        {enrichingField === "email" && (
-                          <div className="absolute -inset-1 border border-purple-300 rounded-full animate-ping"></div>
-                        )}
-                      </div>
-                      <div className="flex-1 relative">
-                        <input
-                          type="email"
-                          placeholder="Email"
-                          value={contactForm.email}
-                          onChange={(e) => setContactForm((prev) => ({ ...prev, email: e.target.value }))}
-                          className={cn(
-                            "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm transition-all duration-300",
-                            enrichingField === "email" && "ring-2 ring-purple-500 bg-purple-50 border-purple-300",
-                            contactForm.email && scanningStep === "complete" && "border-purple-300 bg-purple-50",
-                          )}
-                        />
-                        {enrichingField === "email" && (
-                          <div className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-purple-600 font-medium animate-pulse">
-                            Enriching...
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* LinkedIn */}
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 flex items-center justify-center relative">
-                        <div
-                          className={cn(
-                            "h-4 w-4 transition-all duration-300 flex items-center justify-center",
-                            enrichingField === "linkedin"
-                              ? "text-purple-500"
-                              : contactForm.linkedin
-                                ? "text-purple-500"
-                                : "text-gray-500",
-                          )}
+                    <div className="flex items-center gap-2">
+                      {scanningStep === "form" && (
+                        <Button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            enrichContact()
+                          }}
+                          size="sm"
+                          className="bg-purple-600 hover:bg-purple-700 text-white"
                         >
-                          <svg
-                            viewBox="0 0 24 24"
-                            className={cn("h-4 w-4 fill-current", enrichingField === "linkedin" && "animate-pulse")}
-                          >
-                            <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
-                          </svg>
-                        </div>
-                        {enrichingField === "linkedin" && (
-                          <div className="absolute -inset-1 border border-purple-300 rounded-full animate-ping"></div>
-                        )}
-                      </div>
-                      <div className="flex-1 relative">
-                        <input
-                          type="text"
-                          placeholder="LinkedIn"
-                          value={contactForm.linkedin}
-                          onChange={(e) => setContactForm((prev) => ({ ...prev, linkedin: e.target.value }))}
-                          className={cn(
-                            "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm transition-all duration-300",
-                            enrichingField === "linkedin" && "ring-2 ring-purple-500 bg-purple-50 border-purple-300",
-                            contactForm.linkedin && scanningStep === "complete" && "border-purple-300 bg-purple-50",
-                          )}
-                        />
-                        {enrichingField === "linkedin" && (
-                          <div className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-purple-600 font-medium animate-pulse">
-                            Enriching...
+                          <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 bg-purple-200 rounded-full flex items-center justify-center">
+                              <div className="w-1.5 h-1.5 bg-purple-600 rounded-full"></div>
+                            </div>
+                            Enrich Contact
                           </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Company */}
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 flex items-center justify-center">
-                        <Building className="h-4 w-4 text-gray-500" />
-                      </div>
-                      <div className="flex-1">
-                        <input
-                          type="text"
-                          placeholder="Company"
-                          value={contactForm.company}
-                          onChange={(e) => setContactForm((prev) => ({ ...prev, company: e.target.value }))}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Industry */}
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 flex items-center justify-center relative">
-                        <Factory
-                          className={cn(
-                            "h-4 w-4 transition-all duration-300",
-                            enrichingField === "industry"
-                              ? "text-purple-500 animate-pulse"
-                              : contactForm.industry
-                                ? "text-purple-500"
-                                : "text-gray-500",
-                          )}
-                        />
-                        {enrichingField === "industry" && (
-                          <div className="absolute -inset-1 border border-purple-300 rounded-full animate-ping"></div>
-                        )}
-                      </div>
-                      <div className="flex-1 relative">
-                        <input
-                          type="text"
-                          placeholder="Industry"
-                          value={contactForm.industry}
-                          onChange={(e) => setContactForm((prev) => ({ ...prev, industry: e.target.value }))}
-                          className={cn(
-                            "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm transition-all duration-300",
-                            enrichingField === "industry" && "ring-2 ring-purple-500 bg-purple-50 border-purple-300",
-                            contactForm.industry && scanningStep === "complete" && "border-purple-300 bg-purple-50",
-                          )}
-                        />
-                        {enrichingField === "industry" && (
-                          <div className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-purple-600 font-medium animate-pulse">
-                            Enriching...
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Geography */}
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 flex items-center justify-center relative">
-                        <MapPin
-                          className={cn(
-                            "h-4 w-4 transition-all duration-300",
-                            enrichingField === "geography"
-                              ? "text-purple-500 animate-pulse"
-                              : contactForm.geography
-                                ? "text-purple-500"
-                                : "text-gray-500",
-                          )}
-                        />
-                        {enrichingField === "geography" && (
-                          <div className="absolute -inset-1 border border-purple-300 rounded-full animate-ping"></div>
-                        )}
-                      </div>
-                      <div className="flex-1 relative">
-                        <input
-                          type="text"
-                          placeholder="Geography"
-                          value={contactForm.geography}
-                          onChange={(e) => setContactForm((prev) => ({ ...prev, geography: e.target.value }))}
-                          className={cn(
-                            "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm transition-all duration-300",
-                            enrichingField === "geography" && "ring-2 ring-purple-500 bg-purple-50 border-purple-300",
-                            contactForm.geography && scanningStep === "complete" && "border-purple-300 bg-purple-50",
-                          )}
-                        />
-                        {enrichingField === "geography" && (
-                          <div className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-purple-600 font-medium animate-pulse">
-                            Enriching...
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Revenue */}
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 flex items-center justify-center relative">
-                        <DollarSign
-                          className={cn(
-                            "h-4 w-4 transition-all duration-300",
-                            enrichingField === "revenue"
-                              ? "text-purple-500 animate-pulse"
-                              : contactForm.revenue
-                                ? "text-purple-500"
-                                : "text-gray-500",
-                          )}
-                        />
-                        {enrichingField === "revenue" && (
-                          <div className="absolute -inset-1 border border-purple-300 rounded-full animate-ping"></div>
-                        )}
-                      </div>
-                      <div className="flex-1 relative">
-                        <input
-                          type="text"
-                          placeholder="Revenue"
-                          value={contactForm.revenue}
-                          onChange={(e) => setContactForm((prev) => ({ ...prev, revenue: e.target.value }))}
-                          className={cn(
-                            "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm transition-all duration-300",
-                            enrichingField === "revenue" && "ring-2 ring-purple-500 bg-purple-50 border-purple-300",
-                            contactForm.revenue && scanningStep === "complete" && "border-purple-300 bg-purple-50",
-                          )}
-                        />
-                        {enrichingField === "revenue" && (
-                          <div className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-purple-600 font-medium animate-pulse">
-                            Enriching...
-                          </div>
-                        )}
+                        </Button>
+                      )}
+                      <div className={cn("transition-transform duration-200", showContactForm && "rotate-180")}>
+                        <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
                       </div>
                     </div>
                   </div>
+
+                  {showContactForm && (
+                    <div className="p-4 space-y-3 animate-in slide-in-from-top-2 duration-300">
+                      {/* Name */}
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 flex items-center justify-center">
+                          <User className="h-4 w-4 text-gray-500" />
+                        </div>
+                        <div className="flex-1">
+                          <input
+                            type="text"
+                            placeholder="Name"
+                            value={contactForm.name}
+                            onChange={(e) => setContactForm((prev) => ({ ...prev, name: e.target.value }))}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Role */}
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 flex items-center justify-center">
+                          <Briefcase className="h-4 w-4 text-gray-500" />
+                        </div>
+                        <div className="flex-1">
+                          <input
+                            type="text"
+                            placeholder="Role"
+                            value={contactForm.role}
+                            onChange={(e) => setContactForm((prev) => ({ ...prev, role: e.target.value }))}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Email */}
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 flex items-center justify-center relative">
+                          <Mail
+                            className={cn(
+                              "h-4 w-4 transition-all duration-300",
+                              enrichingField === "email"
+                                ? "text-purple-500 animate-pulse"
+                                : contactForm.email
+                                  ? "text-purple-500"
+                                  : "text-gray-500",
+                            )}
+                          />
+                          {enrichingField === "email" && (
+                            <div className="absolute -inset-1 border border-purple-300 rounded-full animate-ping"></div>
+                          )}
+                        </div>
+                        <div className="flex-1 relative">
+                          <input
+                            type="email"
+                            placeholder="Email"
+                            value={contactForm.email}
+                            onChange={(e) => setContactForm((prev) => ({ ...prev, email: e.target.value }))}
+                            className={cn(
+                              "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm transition-all duration-300",
+                              enrichingField === "email" && "ring-2 ring-purple-500 bg-purple-50 border-purple-300",
+                              contactForm.email && scanningStep === "complete" && "border-purple-300 bg-purple-50",
+                            )}
+                          />
+                          {enrichingField === "email" && (
+                            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-purple-600 font-medium animate-pulse">
+                              Enriching...
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* LinkedIn */}
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 flex items-center justify-center relative">
+                          <div
+                            className={cn(
+                              "h-4 w-4 transition-all duration-300 flex items-center justify-center",
+                              enrichingField === "linkedin"
+                                ? "text-purple-500"
+                                : contactForm.linkedin
+                                  ? "text-purple-500"
+                                  : "text-gray-500",
+                            )}
+                          >
+                            <svg
+                              viewBox="0 0 24 24"
+                              className={cn("h-4 w-4 fill-current", enrichingField === "linkedin" && "animate-pulse")}
+                            >
+                              <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+                            </svg>
+                          </div>
+                          {enrichingField === "linkedin" && (
+                            <div className="absolute -inset-1 border border-purple-300 rounded-full animate-ping"></div>
+                          )}
+                        </div>
+                        <div className="flex-1 relative">
+                          <input
+                            type="text"
+                            placeholder="LinkedIn"
+                            value={contactForm.linkedin}
+                            onChange={(e) => setContactForm((prev) => ({ ...prev, linkedin: e.target.value }))}
+                            className={cn(
+                              "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm transition-all duration-300",
+                              enrichingField === "linkedin" && "ring-2 ring-purple-500 bg-purple-50 border-purple-300",
+                              contactForm.linkedin && scanningStep === "complete" && "border-purple-300 bg-purple-50",
+                            )}
+                          />
+                          {enrichingField === "linkedin" && (
+                            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-purple-600 font-medium animate-pulse">
+                              Enriching...
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Company */}
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 flex items-center justify-center">
+                          <Building className="h-4 w-4 text-gray-500" />
+                        </div>
+                        <div className="flex-1">
+                          <input
+                            type="text"
+                            placeholder="Company"
+                            value={contactForm.company}
+                            onChange={(e) => setContactForm((prev) => ({ ...prev, company: e.target.value }))}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Industry */}
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 flex items-center justify-center relative">
+                          <Factory
+                            className={cn(
+                              "h-4 w-4 transition-all duration-300",
+                              enrichingField === "industry"
+                                ? "text-purple-500 animate-pulse"
+                                : contactForm.industry
+                                  ? "text-purple-500"
+                                  : "text-gray-500",
+                            )}
+                          />
+                          {enrichingField === "industry" && (
+                            <div className="absolute -inset-1 border border-purple-300 rounded-full animate-ping"></div>
+                          )}
+                        </div>
+                        <div className="flex-1 relative">
+                          <input
+                            type="text"
+                            placeholder="Industry"
+                            value={contactForm.industry}
+                            onChange={(e) => setContactForm((prev) => ({ ...prev, industry: e.target.value }))}
+                            className={cn(
+                              "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm transition-all duration-300",
+                              enrichingField === "industry" && "ring-2 ring-purple-500 bg-purple-50 border-purple-300",
+                              contactForm.industry && scanningStep === "complete" && "border-purple-300 bg-purple-50",
+                            )}
+                          />
+                          {enrichingField === "industry" && (
+                            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-purple-600 font-medium animate-pulse">
+                              Enriching...
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Geography */}
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 flex items-center justify-center relative">
+                          <MapPin
+                            className={cn(
+                              "h-4 w-4 transition-all duration-300",
+                              enrichingField === "geography"
+                                ? "text-purple-500 animate-pulse"
+                                : contactForm.geography
+                                  ? "text-purple-500"
+                                  : "text-gray-500",
+                            )}
+                          />
+                          {enrichingField === "geography" && (
+                            <div className="absolute -inset-1 border border-purple-300 rounded-full animate-ping"></div>
+                          )}
+                        </div>
+                        <div className="flex-1 relative">
+                          <input
+                            type="text"
+                            placeholder="Geography"
+                            value={contactForm.geography}
+                            onChange={(e) => setContactForm((prev) => ({ ...prev, geography: e.target.value }))}
+                            className={cn(
+                              "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm transition-all duration-300",
+                              enrichingField === "geography" && "ring-2 ring-purple-500 bg-purple-50 border-purple-300",
+                              contactForm.geography && scanningStep === "complete" && "border-purple-300 bg-purple-50",
+                            )}
+                          />
+                          {enrichingField === "geography" && (
+                            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-purple-600 font-medium animate-pulse">
+                              Enriching...
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Revenue */}
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 flex items-center justify-center relative">
+                          <DollarSign
+                            className={cn(
+                              "h-4 w-4 transition-all duration-300",
+                              enrichingField === "revenue"
+                                ? "text-purple-500 animate-pulse"
+                                : contactForm.revenue
+                                  ? "text-purple-500"
+                                  : "text-gray-500",
+                            )}
+                          />
+                          {enrichingField === "revenue" && (
+                            <div className="absolute -inset-1 border border-purple-300 rounded-full animate-ping"></div>
+                          )}
+                        </div>
+                        <div className="flex-1 relative">
+                          <input
+                            type="text"
+                            placeholder="Revenue"
+                            value={contactForm.revenue}
+                            onChange={(e) => setContactForm((prev) => ({ ...prev, revenue: e.target.value }))}
+                            className={cn(
+                              "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm transition-all duration-300",
+                              enrichingField === "revenue" && "ring-2 ring-purple-500 bg-purple-50 border-purple-300",
+                              contactForm.revenue && scanningStep === "complete" && "border-purple-300 bg-purple-50",
+                            )}
+                          />
+                          {enrichingField === "revenue" && (
+                            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-purple-600 font-medium animate-pulse">
+                              Enriching...
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
-                {/* Enrich Button */}
-                {scanningStep === "form" && (
-                  <Button onClick={enrichContact} className="w-full bg-purple-600 hover:bg-purple-700">
-                    <div className="flex items-center justify-center gap-2">
-                      <div className="w-4 h-4 bg-purple-200 rounded-full flex items-center justify-center">
-                        <div className="w-2 h-2 bg-purple-600 rounded-full"></div>
+                {/* Signals Section - Collapsible */}
+                {scanningStep === "complete" && (
+                  <div className="border border-gray-200 rounded-lg">
+                    <div
+                      className="p-4 bg-gray-50 border-b border-gray-200 cursor-pointer flex items-center justify-between"
+                      onClick={() => setShowSignals(!showSignals)}
+                    >
+                      <h3 className="font-medium text-gray-900 flex items-center gap-2">
+                        <div className="w-5 h-5 bg-blue-100 rounded-full flex items-center justify-center">
+                          <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
+                        </div>
+                        Signals
+                      </h3>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            generateSignals()
+                          }}
+                          size="sm"
+                          disabled={signalsData !== null}
+                          className="bg-blue-600 hover:bg-blue-700 text-white disabled:bg-gray-400 disabled:cursor-not-allowed"
+                        >
+                          <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 bg-blue-200 rounded-full flex items-center justify-center">
+                              <div className="w-1.5 h-1.5 bg-blue-600 rounded-full"></div>
+                            </div>
+                            {isLoadingSignals ? "Finding..." : signalsData ? "Found" : "Find Signals"}
+                          </div>
+                        </Button>
+                        <div className={cn("transition-transform duration-200", showSignals && "rotate-180")}>
+                          <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </div>
                       </div>
-                      Enrich Contact
                     </div>
-                  </Button>
+
+                    {showSignals && (
+                      <div className="p-4 space-y-4 animate-in slide-in-from-top-2 duration-300">
+                        {isLoadingSignals ? (
+                          <div className="flex items-center justify-center py-8">
+                            <div className="text-center space-y-3">
+                              <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
+                              <p className="text-sm text-gray-600">Analyzing signals...</p>
+                            </div>
+                          </div>
+                        ) : (
+                          signalsData && (
+                            <div className="space-y-4">
+                              {/* Internal Signals */}
+                              <div className="p-4 bg-gray-100 rounded-lg border border-gray-200">
+                                <div className="flex items-center justify-between mb-3">
+                                  <h4 className="font-medium text-gray-800">Internal Signals</h4>
+                                  <div className="text-2xl font-bold text-purple-600">
+                                    {signalsData.internal.score}/100
+                                  </div>
+                                </div>
+
+                                <div className="space-y-2 mb-3">
+                                  {signalsData.internal.insights.map((insight, index) => (
+                                    <div key={index} className="flex items-start gap-2">
+                                      <div className="w-1.5 h-1.5 bg-purple-600 rounded-full mt-2 flex-shrink-0"></div>
+                                      <p className="text-sm text-gray-700">{insight}</p>
+                                    </div>
+                                  ))}
+                                </div>
+
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs font-medium text-gray-800">Opportunities:</span>
+                                  <div className="flex gap-1">
+                                    {signalsData.internal.opportunities.map((opp, index) => (
+                                      <span
+                                        key={index}
+                                        className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800"
+                                      >
+                                        {opp}
+                                      </span>
+                                    ))}
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* External Signals */}
+                              <div className="p-4 bg-gray-100 rounded-lg border border-gray-200">
+                                <div className="flex items-center justify-between mb-3">
+                                  <h4 className="font-medium text-gray-800">External Signals</h4>
+                                  <div className="text-2xl font-bold text-purple-600">
+                                    {signalsData.external.score}/100
+                                  </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                  {signalsData.external.insights.map((insight, index) => (
+                                    <div key={index} className="flex items-start gap-2">
+                                      <div className="w-1.5 h-1.5 bg-purple-600 rounded-full mt-2 flex-shrink-0"></div>
+                                      <p className="text-sm text-gray-700">{insight}</p>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+                          )
+                        )}
+                      </div>
+                    )}
+                  </div>
                 )}
 
                 {/* Enriching Status */}
@@ -953,6 +1115,10 @@ export default function BoothDelight() {
                         revenue: "",
                       })
                       showSuccessAnimation("Contact saved successfully!")
+                      setShowSignals(false)
+                      setSignalsData(null)
+                      setIsLoadingSignals(false)
+                      setShowContactForm(true)
                     }}
                     className="w-full bg-purple-600 hover:bg-purple-700"
                   >
