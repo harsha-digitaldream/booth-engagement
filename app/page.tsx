@@ -23,6 +23,7 @@ import {
   Trash2,
   CheckCircle,
   Send,
+  RefreshCw,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -35,6 +36,7 @@ const mockLeadData = {
   phone: "+1 (555) 123-4567",
   location: "San Francisco, CA",
   interests: ["AI/ML", "Cloud Infrastructure", "DevOps"],
+  crmSynced: false,
 }
 
 export default function BoothDelight() {
@@ -53,27 +55,34 @@ export default function BoothDelight() {
   const [teamMembers, setTeamMembers] = useState([
     {
       id: "1",
+      name: "Pinkesh Shah",
+      role: "Chief Delight Officer",
+      meetingLink: "https://cal.com/pinkesh-shah/30min",
+      avatar: "PS",
+    },
+    {
+      id: "2",
       name: "Sarah Johnson",
       role: "Sales Director",
       meetingLink: "https://cal.com/sarah-johnson/30min",
       avatar: "SJ",
     },
     {
-      id: "2",
+      id: "3",
       name: "Mike Chen",
       role: "Product Manager",
       meetingLink: "https://cal.com/mike-chen/demo",
       avatar: "MC",
     },
     {
-      id: "3",
+      id: "4",
       name: "Emily Rodriguez",
       role: "Solutions Engineer",
       meetingLink: "https://cal.com/emily-rodriguez/consultation",
       avatar: "ER",
     },
     {
-      id: "4",
+      id: "5",
       name: "David Kim",
       role: "Account Executive",
       meetingLink: "https://cal.com/david-kim/discovery",
@@ -99,6 +108,7 @@ export default function BoothDelight() {
       abxIndicator: "High",
       meetingBooked: true,
       giftSent: false,
+      crmSynced: true,
       scannedAt: new Date("2025-01-08T10:30:00"),
     },
     {
@@ -116,6 +126,7 @@ export default function BoothDelight() {
       abxIndicator: "Medium",
       meetingBooked: false,
       giftSent: true,
+      crmSynced: false,
       scannedAt: new Date("2025-01-08T11:15:00"),
     },
     {
@@ -133,10 +144,12 @@ export default function BoothDelight() {
       abxIndicator: "High",
       meetingBooked: true,
       giftSent: true,
+      crmSynced: true,
       scannedAt: new Date("2025-01-08T09:45:00"),
     },
   ])
   const [showVisitorsList, setShowVisitorsList] = useState(false)
+  const [selectedRecipient, setSelectedRecipient] = useState("")
 
   const generateAvatar = (name) => {
     const names = name.split(" ")
@@ -234,6 +247,7 @@ export default function BoothDelight() {
           meetingBooked: false,
           giftSent: false,
           scannedAt: new Date(),
+          crmSynced: false,
         }
         setVisitors((prev) => [newVisitor, ...prev])
       }
@@ -241,10 +255,17 @@ export default function BoothDelight() {
   }
 
   const selectedMemberData = teamMembers.find((member) => member.id === selectedMember)
+  const selectedRecipientData = visitors.find((visitor) => visitor.id === selectedRecipient)
+  const isGeneralGift = selectedRecipient === "general"
 
   const handleSendGiftToVisitor = (visitorId) => {
     setVisitors((prev) => prev.map((visitor) => (visitor.id === visitorId ? { ...visitor, giftSent: true } : visitor)))
     showSuccessAnimation("Gift sent to visitor!")
+  }
+
+  const handleCrmSync = (visitorId) => {
+    setVisitors((prev) => prev.map((visitor) => (visitor.id === visitorId ? { ...visitor, crmSynced: true } : visitor)))
+    showSuccessAnimation("Visitor synced to CRM!")
   }
 
   const getABXColor = (indicator) => {
@@ -264,14 +285,14 @@ export default function BoothDelight() {
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100 p-4">
       <div className="max-w-md mx-auto space-y-6">
         {/* Header */}
-        <div className="text-center space-y-3 pt-6">
-          <div className="space-y-1">
-            <h1 className="text-3xl font-bold text-gray-900">Booth Engagement</h1>
-            <p className="text-gray-600">Delight Booth Attendees</p>
-          </div>
-          <div className="pt-2">
-            <p className="text-sm font-medium text-gray-500 uppercase tracking-wide">Event</p>
-            <h2 className="text-lg font-semibold text-gray-800">BlackHat Briefing 2025</h2>
+        <div className="text-center pt-6 pb-4">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Booth Engagement</h1>
+          <div className="relative w-full max-w-sm mx-auto">
+            <img
+              src="/blackhat-usa-2025.jpg"
+              alt="Black Hat USA 2025 - August 2-7, 2025 - Mandalay Bay / Las Vegas"
+              className="w-full h-auto rounded-lg shadow-lg"
+            />
           </div>
         </div>
 
@@ -284,9 +305,6 @@ export default function BoothDelight() {
                 <div className="flex items-center gap-2">
                   <Scan className="h-5 w-5 text-purple-600" />
                   Lead Scanner
-                </div>
-                <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
-                  <img src="/placeholder.svg?height=24&width=24&text=QR" alt="QR Preview" className="w-4 h-4" />
                 </div>
               </CardTitle>
               <CardDescription>Scan & enrich visitor data</CardDescription>
@@ -396,13 +414,62 @@ export default function BoothDelight() {
                   <Gift className="h-5 w-5 text-purple-600" />
                   Send Gift
                 </div>
-                <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
-                  <img src="/placeholder.svg?height=24&width=24&text=🎁" alt="Gift Preview" className="w-4 h-4" />
-                </div>
               </CardTitle>
               <CardDescription>Share promotional offers</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-3">
+              <Select value={selectedRecipient} onValueChange={setSelectedRecipient}>
+                <SelectTrigger className="h-12">
+                  <SelectValue placeholder="Select recipient (optional)">
+                    {selectedRecipientData && (
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center text-xs font-medium text-purple-700">
+                          {selectedRecipientData.avatar}
+                        </div>
+                        <div className="flex flex-col items-start">
+                          <span className="font-medium text-sm">{selectedRecipientData.name}</span>
+                          <span className="text-xs text-gray-500">{selectedRecipientData.company}</span>
+                        </div>
+                      </div>
+                    )}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent className="max-h-80 w-[var(--radix-select-trigger-width)]">
+                  <SelectItem value="general" className="py-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-sm font-medium text-gray-500">
+                        <Gift className="h-4 w-4" />
+                      </div>
+                      <div className="flex flex-col items-start">
+                        <span className="font-medium">General Gift</span>
+                        <span className="text-sm text-gray-500">No specific recipient</span>
+                      </div>
+                    </div>
+                  </SelectItem>
+                  {visitors.map((visitor) => (
+                    <SelectItem key={visitor.id} value={visitor.id} className="py-3">
+                      <div className="flex items-center gap-3">
+                        <div className="relative">
+                          <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center text-sm font-medium text-purple-700">
+                            {visitor.avatar}
+                          </div>
+                          <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-white rounded-full border border-gray-200 flex items-center justify-center">
+                            <img
+                              src={visitor.companyLogo || "/placeholder.svg?height=12&width=12&text=C"}
+                              alt={visitor.company}
+                              className="w-2 h-2 rounded-full"
+                            />
+                          </div>
+                        </div>
+                        <div className="flex flex-col items-start">
+                          <span className="font-medium">{visitor.name}</span>
+                          <span className="text-sm text-gray-500">{visitor.company}</span>
+                        </div>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               {/* Send Gift - Outline/Inverse Purple */}
               <Button
                 onClick={() => setShowGiftQR(true)}
@@ -450,6 +517,11 @@ export default function BoothDelight() {
             </SheetTitle>
             <SheetDescription>
               {emailType === "meeting" ? "Send meeting link to visitor's email" : "Send gift link to visitor's email"}
+              {selectedRecipientData && emailType === "gift" && (
+                <span className="block mt-1 text-purple-600">
+                  Sending to: {selectedRecipientData.name} ({selectedRecipientData.email})
+                </span>
+              )}
             </SheetDescription>
           </SheetHeader>
 
@@ -460,7 +532,9 @@ export default function BoothDelight() {
                 id="email"
                 type="email"
                 placeholder="visitor@company.com"
-                value={emailAddress}
+                value={
+                  emailAddress || (selectedRecipientData && emailType === "gift" ? selectedRecipientData.email : "")
+                }
                 onChange={(e) => setEmailAddress(e.target.value)}
                 className="focus:ring-2 focus:ring-purple-500"
               />
@@ -469,7 +543,7 @@ export default function BoothDelight() {
             <div className="flex gap-3">
               <Button
                 onClick={handleSendEmail}
-                disabled={!emailAddress}
+                disabled={!emailAddress && !(selectedRecipientData && emailType === "gift")}
                 className="flex-1 bg-purple-600 hover:bg-purple-700"
               >
                 <Send className="h-4 w-4 mr-2" />
@@ -575,11 +649,7 @@ export default function BoothDelight() {
 
           <div className="flex flex-col items-center justify-center space-y-6 mt-8 pb-6">
             <div className="p-4 bg-white rounded-lg shadow-lg">
-              <img
-                src={`/placeholder.svg?height=200&width=200&text=QR+Code+Meeting+Link`}
-                alt="Meeting QR Code"
-                className="w-48 h-48"
-              />
+              <img src="/pinkesh-book-meeting-qr.png" alt="Meeting QR Code" className="w-48 h-48" />
             </div>
 
             <div className="text-center space-y-2">
@@ -617,23 +687,54 @@ export default function BoothDelight() {
           <SheetHeader>
             <SheetTitle className="flex items-center gap-2">
               <Gift className="h-5 w-5" />
-              Promotional Gift
+              {selectedRecipientData
+                ? `Gift for ${selectedRecipientData.name}`
+                : isGeneralGift
+                  ? "General Promotional Gift"
+                  : "Promotional Gift"}
             </SheetTitle>
-            <SheetDescription>Scan QR code or send via email to claim gift</SheetDescription>
+            <SheetDescription>
+              {selectedRecipientData
+                ? `Send personalized gift to ${selectedRecipientData.name} at ${selectedRecipientData.company}`
+                : "Scan QR code or send via email to claim gift"}
+            </SheetDescription>
           </SheetHeader>
 
           <div className="flex flex-col items-center justify-center space-y-6 mt-8 pb-6">
+            {selectedRecipientData && (
+              <div className="flex items-center gap-3 p-3 bg-purple-50 rounded-lg border border-purple-200 w-full">
+                <div className="relative">
+                  <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center text-sm font-medium text-purple-700">
+                    {selectedRecipientData.avatar}
+                  </div>
+                  <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-white rounded-full border border-gray-200 flex items-center justify-center">
+                    <img
+                      src={selectedRecipientData.companyLogo || "/placeholder.svg?height=12&width=12&text=C"}
+                      alt={selectedRecipientData.company}
+                      className="w-2 h-2 rounded-full"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <h3 className="font-medium">{selectedRecipientData.name}</h3>
+                  <p className="text-sm text-gray-600">
+                    {selectedRecipientData.title} • {selectedRecipientData.company}
+                  </p>
+                </div>
+              </div>
+            )}
+
             <div className="p-4 bg-white rounded-lg shadow-lg">
-              <img
-                src={`/placeholder.svg?height=200&width=200&text=Gift+QR+Code`}
-                alt="Gift QR Code"
-                className="w-48 h-48"
-              />
+              <img src="/campaign-gift-qr.svg" alt="Gift QR Code" className="w-48 h-48" />
             </div>
 
             <div className="text-center space-y-2">
               <p className="font-medium text-purple-600">🎁 Special Booth Gift</p>
-              <p className="text-sm text-gray-500">Scan to claim your exclusive promotional offer</p>
+              <p className="text-sm text-gray-500">
+                {selectedRecipientData
+                  ? `Personalized offer for ${selectedRecipientData.name}`
+                  : "Scan to claim your exclusive promotional offer"}
+              </p>
             </div>
 
             <div className="flex gap-3 w-full">
@@ -649,7 +750,11 @@ export default function BoothDelight() {
                 variant="outline"
                 onClick={() => {
                   setShowGiftQR(false)
-                  showSuccessAnimation("Gift shared!")
+                  if (selectedRecipientData) {
+                    handleSendGiftToVisitor(selectedRecipientData.id)
+                  } else {
+                    showSuccessAnimation("Gift shared!")
+                  }
                 }}
                 className="flex-1"
               >
@@ -808,104 +913,130 @@ export default function BoothDelight() {
               </div>
             ) : (
               visitors.map((visitor) => (
-                <div key={visitor.id} className="bg-white border border-gray-200 rounded-lg p-3 space-y-2">
-                  {/* Header with Avatar and Basic Info */}
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center text-sm font-medium text-purple-700">
+                <div key={visitor.id} className="bg-white border border-gray-200 rounded-lg p-3 space-y-3">
+                  {/* Header with Avatar, Company Logo, and Basic Info */}
+                  <div className="flex items-start gap-3">
+                    {/* Avatar with Company Logo Overlay */}
+                    <div className="relative">
+                      <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center text-sm font-medium text-purple-700">
                         {visitor.avatar}
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-semibold text-base truncate">{visitor.name}</h3>
-                          <Badge className={cn("text-xs px-1.5 py-0.5", getABXColor(visitor.abxIndicator))}>
-                            {visitor.abxIndicator}
-                          </Badge>
-                        </div>
-                        <p className="text-sm text-gray-600 truncate">{visitor.title}</p>
-                        <div className="flex items-center gap-1.5">
-                          <img
-                            src={visitor.companyLogo || "/placeholder.svg"}
-                            alt={visitor.company}
-                            className="w-3 h-3"
-                          />
-                          <span className="text-xs text-gray-500 truncate">{visitor.company}</span>
-                          <span className="text-xs text-gray-400">•</span>
-                          <span className="text-xs text-green-600 font-medium">{visitor.opportunityCost}</span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="text-right text-xs text-gray-400 whitespace-nowrap ml-2">
-                      {visitor.scannedAt.toLocaleDateString([], { month: "short", day: "numeric" })}
-                      <br />
-                      {visitor.scannedAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                    </div>
-                  </div>
-
-                  {/* Contact Info Row */}
-                  <div className="flex items-center gap-3 text-xs text-gray-600 overflow-hidden">
-                    <div className="flex items-center gap-1 min-w-0 flex-1">
-                      <Mail className="h-3 w-3 shrink-0" />
-                      <span className="truncate">{visitor.email}</span>
-                    </div>
-                    <div className="flex items-center gap-1 shrink-0">
-                      <Phone className="h-3 w-3" />
-                      <span className="whitespace-nowrap">{visitor.phone}</span>
-                    </div>
-                  </div>
-
-                  {/* Location and Interests Row */}
-                  <div className="space-y-1.5">
-                    <div className="flex items-center gap-1 text-xs text-gray-600">
-                      <MapPin className="h-3 w-3 shrink-0" />
-                      <span className="truncate">{visitor.location}</span>
-                    </div>
-
-                    {/* Interests */}
-                    {visitor.interests && visitor.interests.length > 0 && (
-                      <div className="flex flex-wrap gap-1">
-                        {visitor.interests.map((interest, index) => (
-                          <Badge key={index} variant="secondary" className="text-xs px-1.5 py-0.5 h-5">
-                            {interest}
-                          </Badge>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Actions Row */}
-                  <div className="flex items-center justify-between pt-1 border-t border-gray-100">
-                    <div className="flex items-center gap-3">
-                      {/* Meeting Status */}
-                      <div className="flex items-center gap-1">
-                        <Calendar
-                          className={cn("h-3.5 w-3.5", visitor.meetingBooked ? "text-green-500" : "text-gray-300")}
+                      {/* Company Logo Overlay */}
+                      <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-white rounded-full border border-gray-200 flex items-center justify-center">
+                        <img
+                          src={visitor.companyLogo || "/placeholder.svg?height=16&width=16&text=C"}
+                          alt={visitor.company}
+                          className="w-3 h-3 rounded-full"
                         />
-                        <span className={cn("text-xs", visitor.meetingBooked ? "text-green-600" : "text-gray-400")}>
-                          {visitor.meetingBooked ? "Meeting" : "No Meeting"}
-                        </span>
-                      </div>
-
-                      {/* Gift Status */}
-                      <div className="flex items-center gap-1">
-                        <Gift className={cn("h-3.5 w-3.5", visitor.giftSent ? "text-purple-500" : "text-gray-300")} />
-                        <span className={cn("text-xs", visitor.giftSent ? "text-purple-600" : "text-gray-400")}>
-                          {visitor.giftSent ? "Gift Sent" : "No Gift"}
-                        </span>
                       </div>
                     </div>
 
-                    {/* Send Gift Button */}
-                    {!visitor.giftSent && (
-                      <Button
-                        onClick={() => handleSendGiftToVisitor(visitor.id)}
-                        size="sm"
-                        className="bg-purple-600 hover:bg-purple-700 h-7 px-2 text-xs"
-                      >
-                        <Gift className="h-3 w-3 mr-1" />
-                        Send Gift
-                      </Button>
-                    )}
+                    {/* Visitor Info */}
+                    <div className="flex-1 min-w-0">
+                      {/* Line 1: Name, Designation, Company */}
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-base truncate">{visitor.name}</h3>
+                          <p className="text-sm text-gray-600 truncate">
+                            {visitor.title} • {visitor.company}
+                          </p>
+                        </div>
+                        <div className="text-right text-xs text-gray-400 whitespace-nowrap ml-2">
+                          {visitor.scannedAt.toLocaleDateString([], { month: "short", day: "numeric" })}
+                          <br />
+                          {visitor.scannedAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                        </div>
+                      </div>
+
+                      {/* Line 2: Opportunity Cost */}
+                      <div className="mt-1">
+                        <span className="text-sm text-green-600 font-medium">
+                          Opportunity: {visitor.opportunityCost || "$0"}
+                        </span>
+                      </div>
+
+                      {/* Line 3: ABX Indicator */}
+                      <div className="mt-1">
+                        <span className="text-sm text-gray-600">
+                          ABX Indicator:
+                          <span
+                            className={cn(
+                              "ml-1 font-medium",
+                              visitor.abxIndicator === "High"
+                                ? "text-green-600"
+                                : visitor.abxIndicator === "Medium"
+                                  ? "text-yellow-600"
+                                  : visitor.abxIndicator === "Low"
+                                    ? "text-red-600"
+                                    : "text-gray-500",
+                            )}
+                          >
+                            {visitor.abxIndicator === "High"
+                              ? "+ve"
+                              : visitor.abxIndicator === "Medium"
+                                ? "+ve"
+                                : visitor.abxIndicator === "Low"
+                                  ? "-ve"
+                                  : "Unknown"}
+                          </span>
+                        </span>
+                      </div>
+
+                      {/* Line 4: Status Icons and Action Buttons */}
+                      <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-100">
+                        {/* Status Icons - Left Side */}
+                        <div className="flex items-center gap-3">
+                          {/* Meeting Status */}
+                          <Calendar
+                            className={cn("h-4 w-4", visitor.meetingBooked ? "text-green-500" : "text-gray-300")}
+                          />
+
+                          {/* Gift Status */}
+                          <Gift className={cn("h-4 w-4", visitor.giftSent ? "text-green-500" : "text-gray-300")} />
+
+                          {/* CRM Synced Status */}
+                          <RefreshCw
+                            className={cn("h-4 w-4", visitor.crmSynced ? "text-green-500" : "text-gray-300")}
+                          />
+                        </div>
+
+                        {/* Action Buttons - Right Side */}
+                        <div className="flex items-center gap-2">
+                          {/* CRM Sync Button */}
+                          <Button
+                            onClick={() => handleCrmSync(visitor.id)}
+                            size="sm"
+                            variant="outline"
+                            disabled={visitor.crmSynced}
+                            className={cn(
+                              "h-7 px-2 text-xs",
+                              visitor.crmSynced
+                                ? "border-green-200 text-green-600 bg-green-50"
+                                : "border-purple-200 text-purple-600 hover:bg-purple-50",
+                            )}
+                          >
+                            <RefreshCw className="h-3 w-3 mr-1" />
+                            {visitor.crmSynced ? "Synced" : "Sync"}
+                          </Button>
+
+                          {/* Gift Action Button */}
+                          <Button
+                            onClick={() => (visitor.giftSent ? null : handleSendGiftToVisitor(visitor.id))}
+                            size="sm"
+                            variant={visitor.giftSent ? "outline" : "default"}
+                            className={cn(
+                              "h-7 px-2 text-xs",
+                              visitor.giftSent
+                                ? "border-green-200 text-green-600 bg-green-50"
+                                : "bg-purple-600 hover:bg-purple-700 text-white",
+                            )}
+                          >
+                            <Gift className="h-3 w-3 mr-1" />
+                            {visitor.giftSent ? "Track" : "Send"}
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               ))
