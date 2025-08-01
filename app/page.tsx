@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet"
-import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
@@ -22,6 +21,10 @@ import {
   CheckCircle,
   Send,
   RefreshCw,
+  Briefcase,
+  Factory,
+  MapPin,
+  DollarSign,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -148,7 +151,19 @@ export default function BoothDelight() {
   ])
   const [showVisitorsList, setShowVisitorsList] = useState(false)
   const [selectedRecipient, setSelectedRecipient] = useState("")
-  const [scanningStep, setScanningStep] = useState("scanning") // 'scanning', 'profile', 'pitch', 'intent', 'complete'
+  const [scanningStep, setScanningStep] = useState("camera") // 'camera', 'form', 'enriching', 'complete'
+  const [contactForm, setContactForm] = useState({
+    name: "",
+    role: "",
+    email: "",
+    linkedin: "",
+    company: "",
+    industry: "",
+    geography: "",
+    revenue: "",
+  })
+  const [isEnriching, setIsEnriching] = useState(false)
+  const [enrichingField, setEnrichingField] = useState("")
 
   const generateAvatar = (name) => {
     const names = name.split(" ")
@@ -218,65 +233,59 @@ export default function BoothDelight() {
 
   const handleLeadScan = () => {
     setShowLeadScanner(true)
-    setScanningStep("scanning")
+    setScanningStep("camera")
+    setIsScanning(false)
+    setScannedLead(null)
+  }
+
+  const simulateCameraScan = () => {
     setIsScanning(true)
 
-    // Step 1: Badge Scanning (2 seconds)
+    // Simulate camera scanning for 3 seconds
     setTimeout(() => {
-      setScanningStep("profile")
-    }, 2000)
-
-    // Step 2: Profile Enrichment (3 seconds)
-    setTimeout(() => {
-      setScanningStep("pitch")
-    }, 5000)
-
-    // Step 3: Pitch Enrichment (3 seconds)
-    setTimeout(() => {
-      setScanningStep("intent")
-    }, 8000)
-
-    // Step 4: Intent Score Calculation (3 seconds)
-    setTimeout(() => {
-      setScanningStep("complete")
       setIsScanning(false)
-      setScannedLead({
-        ...mockLeadData,
-        internalIntent: 78,
-        externalIntent: 65,
-        pitchRelevance: "High",
-        techStackMatch: "85%",
-        linkedinProfile: `linkedin.com/in/${mockLeadData.name.toLowerCase().replace(" ", "-")}`,
-      })
+      setScanningStep("form")
 
-      // Add to visitors list if not already exists
-      const existingVisitor = visitors.find((v) => v.email === mockLeadData.email)
-      if (!existingVisitor) {
-        const newVisitor = {
-          id: Date.now().toString(),
-          ...mockLeadData,
-          avatar: mockLeadData.name
-            .split(" ")
-            .map((n) => n[0])
-            .join(""),
-          companyLogo:
-            "/placeholder.svg?height=32&width=32&text=" +
-            mockLeadData.company
-              .split(" ")
-              .map((w) => w[0])
-              .join(""),
-          opportunityCost: "$" + (Math.floor(Math.random() * 100) + 25) + "K",
-          abxIndicator: ["High", "Medium", "Low"][Math.floor(Math.random() * 3)],
-          meetingBooked: false,
-          giftSent: false,
-          scannedAt: new Date(),
-          crmSynced: false,
-          internalIntent: 78,
-          externalIntent: 65,
-        }
-        setVisitors((prev) => [newVisitor, ...prev])
-      }
-    }, 11000)
+      // Pre-fill basic contact info
+      setContactForm({
+        name: "Alex Thompson",
+        role: "VP of Engineering",
+        company: "TechCorp Solutions",
+        email: "",
+        linkedin: "",
+        industry: "",
+        geography: "",
+        revenue: "",
+      })
+    }, 3000)
+  }
+
+  const enrichContact = () => {
+    setIsEnriching(true)
+    const fieldsToEnrich = [
+      { field: "email", value: "alex.thompson@techcorp.com", delay: 1000 },
+      { field: "linkedin", value: "linkedin.com/in/alex-thompson-vp", delay: 2000 },
+      { field: "industry", value: "Technology & Software", delay: 3000 },
+      { field: "geography", value: "San Francisco, CA", delay: 4000 },
+      { field: "revenue", value: "$50M - $100M", delay: 5000 },
+    ]
+
+    fieldsToEnrich.forEach(({ field, value, delay }) => {
+      setTimeout(() => {
+        setEnrichingField(field)
+        setTimeout(() => {
+          setContactForm((prev) => ({ ...prev, [field]: value }))
+          setEnrichingField("")
+        }, 800)
+      }, delay)
+    })
+
+    setTimeout(() => {
+      setIsEnriching(false)
+      setScanningStep("complete")
+      // Show celebration animation
+      showSuccessAnimation("🎉 Contact enriched successfully!")
+    }, 6500)
   }
 
   const selectedMemberData = teamMembers.find((member) => member.id === selectedMember)
@@ -591,304 +600,365 @@ export default function BoothDelight() {
               Lead Scanner
             </SheetTitle>
             <SheetDescription>
-              {scanningStep === "scanning" && "Scanning badge..."}
-              {scanningStep === "profile" && "Enriching profile data..."}
-              {scanningStep === "pitch" && "Analyzing pitch relevance..."}
-              {scanningStep === "intent" && "Calculating intent scores..."}
-              {scanningStep === "complete" && "Lead analysis complete"}
+              {scanningStep === "camera" && "Position badge in camera view"}
+              {scanningStep === "form" && "Review and enrich contact information"}
+              {scanningStep === "enriching" && "Enriching contact data..."}
+              {scanningStep === "complete" && "Contact enrichment complete"}
             </SheetDescription>
           </SheetHeader>
 
           <div className="mt-6 pb-6 space-y-6">
-            {/* Badge Scanning Step */}
-            {scanningStep === "scanning" && (
-              <div className="flex flex-col items-center justify-center space-y-4 py-12 animate-in fade-in duration-500">
-                <div className="w-32 h-32 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin"></div>
-                <p className="text-lg font-medium">Scanning badge...</p>
-                <p className="text-sm text-gray-500">Please hold steady</p>
-              </div>
-            )}
+            {/* Camera View */}
+            {scanningStep === "camera" && (
+              <div className="flex flex-col items-center justify-center space-y-6 py-8">
+                <div className="relative w-full max-w-sm mx-auto">
+                  {/* Camera Preview Simulation */}
+                  <div className="aspect-square bg-gray-900 rounded-lg overflow-hidden relative">
+                    <div className="absolute inset-0 bg-gradient-to-br from-gray-800 to-gray-900"></div>
 
-            {/* Progressive Display - Profile Enrichment */}
-            {(scanningStep === "profile" ||
-              scanningStep === "pitch" ||
-              scanningStep === "intent" ||
-              scanningStep === "complete") && (
-              <div className="space-y-4 animate-in slide-in-from-bottom-4 duration-700">
-                <div className="flex items-center gap-2 text-sm font-medium text-purple-600 mb-3">
-                  {scanningStep === "profile" ? (
-                    <div className="w-4 h-4 border-2 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
-                  ) : (
-                    <CheckCircle className="h-4 w-4" />
-                  )}
-                  Profile {scanningStep === "profile" ? "Enriching..." : "Enriched"}
-                </div>
-
-                {scanningStep === "profile" && (
-                  <div className="flex flex-col items-center justify-center space-y-6 py-8">
-                    <div className="relative">
-                      <div className="w-24 h-24 bg-purple-100 rounded-full flex items-center justify-center">
-                        <User className="h-12 w-12 text-purple-600 animate-pulse" />
-                      </div>
-                      <div className="absolute -inset-4 border-2 border-purple-200 rounded-full animate-ping opacity-30"></div>
-                    </div>
-                    <div className="text-center space-y-2">
-                      <p className="text-lg font-medium">Profile Enrichment</p>
-                      <p className="text-sm text-gray-500">Analyzing professional data...</p>
-                    </div>
-                    <div className="w-full max-w-sm space-y-2">
-                      <div className="flex items-center gap-2 text-sm">
-                        <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce"></div>
-                        <span>Extracting contact information</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm">
-                        <div
-                          className="w-2 h-2 bg-purple-500 rounded-full animate-bounce"
-                          style={{ animationDelay: "0.1s" }}
-                        ></div>
-                        <span>Enriching company details</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm">
-                        <div
-                          className="w-2 h-2 bg-purple-500 rounded-full animate-bounce"
-                          style={{ animationDelay: "0.2s" }}
-                        ></div>
-                        <span>Finding LinkedIn profile</span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Show profile data once enrichment is complete (pitch, intent, or complete steps) */}
-                {(scanningStep === "pitch" || scanningStep === "intent" || scanningStep === "complete") &&
-                  scannedLead && (
-                    <div className="animate-in slide-in-from-bottom-4 duration-500">
-                      <div className="flex items-center gap-4 p-4 bg-purple-50 rounded-lg border border-purple-200">
-                        <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center text-xl font-bold text-purple-700">
-                          {scannedLead.name
-                            .split(" ")
-                            .map((n) => n[0])
-                            .join("")}
-                        </div>
-                        <div className="flex-1">
-                          <h3 className="font-semibold text-lg">{scannedLead.name}</h3>
-                          <p className="text-gray-600">{scannedLead.title}</p>
-                          <p className="text-sm text-gray-500">{scannedLead.company}</p>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-1 gap-3 mt-4">
-                        <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                          <Mail className="h-5 w-5 text-gray-500" />
-                          <span className="text-sm">{scannedLead.email}</span>
-                        </div>
-
-                        <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                          <div className="h-5 w-5 text-gray-500 flex items-center justify-center">
-                            <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current">
-                              <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
-                            </svg>
-                          </div>
-                          <span className="text-sm text-blue-600">
-                            linkedin.com/in/{scannedLead.name.toLowerCase().replace(" ", "-")}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-              </div>
-            )}
-
-            {/* Progressive Display - Pitch Enrichment */}
-            {(scanningStep === "pitch" || scanningStep === "intent" || scanningStep === "complete") && (
-              <div
-                className="space-y-4 animate-in slide-in-from-bottom-4 duration-700"
-                style={{ animationDelay: "0.3s" }}
-              >
-                <div className="flex items-center gap-2 text-sm font-medium text-green-600 mb-3">
-                  {scanningStep === "pitch" ? (
-                    <div className="w-4 h-4 border-2 border-green-600 border-t-transparent rounded-full animate-spin"></div>
-                  ) : (
-                    <CheckCircle className="h-4 w-4" />
-                  )}
-                  Pitch {scanningStep === "pitch" ? "Enriching..." : "Enriched"}
-                </div>
-
-                {scanningStep === "pitch" && (
-                  <div className="flex flex-col items-center justify-center space-y-6 py-8">
-                    <div className="relative">
-                      <div className="w-24 h-24 bg-purple-100 rounded-full flex items-center justify-center">
-                        <Building className="h-12 w-12 text-purple-600 animate-pulse" />
-                      </div>
-                      <div className="absolute -inset-4 border-2 border-purple-200 rounded-full animate-ping opacity-30"></div>
-                    </div>
-                    <div className="text-center space-y-2">
-                      <p className="text-lg font-medium">Pitch Enrichment</p>
-                      <p className="text-sm text-gray-500">Analyzing company fit and relevance...</p>
-                    </div>
-                    <div className="w-full max-w-sm space-y-2">
-                      <div className="flex items-center gap-2 text-sm">
-                        <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce"></div>
-                        <span>Analyzing company tech stack</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm">
-                        <div
-                          className="w-2 h-2 bg-purple-500 rounded-full animate-bounce"
-                          style={{ animationDelay: "0.1s" }}
-                        ></div>
-                        <span>Identifying pain points</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm">
-                        <div
-                          className="w-2 h-2 bg-purple-500 rounded-full animate-bounce"
-                          style={{ animationDelay: "0.2s" }}
-                        ></div>
-                        <span>Matching solution relevance</span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {(scanningStep === "intent" || scanningStep === "complete") && (
-                  <div className="animate-in slide-in-from-bottom-4 duration-500">
-                    <div className="p-4 bg-green-50 rounded-lg border border-green-200">
-                      <h4 className="font-medium mb-2 text-green-800">Company Analysis</h4>
-                      <div className="space-y-2 text-sm">
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Tech Stack Match:</span>
-                          <span className="font-medium text-green-700">85% Compatible</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Solution Relevance:</span>
-                          <span className="font-medium text-green-700">High</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Pain Point Alignment:</span>
-                          <span className="font-medium text-green-700">Strong Match</span>
-                        </div>
-                      </div>
+                    {/* Scanning Overlay */}
+                    <div className="absolute inset-4 border-2 border-white/30 rounded-lg">
+                      <div className="absolute top-0 left-0 w-6 h-6 border-t-2 border-l-2 border-purple-400"></div>
+                      <div className="absolute top-0 right-0 w-6 h-6 border-t-2 border-r-2 border-purple-400"></div>
+                      <div className="absolute bottom-0 left-0 w-6 h-6 border-b-2 border-l-2 border-purple-400"></div>
+                      <div className="absolute bottom-0 right-0 w-6 h-6 border-b-2 border-r-2 border-purple-400"></div>
                     </div>
 
-                    <div className="p-3 bg-blue-50 rounded-lg border border-blue-200 mt-3">
-                      <p className="text-sm text-blue-800">
-                        <strong>Key Insight:</strong> {scannedLead?.company} is actively expanding their cloud
-                        infrastructure. Our security solutions align perfectly with their current DevOps transformation.
+                    {/* Scanning Animation */}
+                    {isScanning && (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="w-full h-1 bg-purple-500 animate-pulse"></div>
+                      </div>
+                    )}
+
+                    {/* Instructions */}
+                    <div className="absolute bottom-4 left-4 right-4 text-center">
+                      <p className="text-white text-sm">
+                        {isScanning ? "Scanning badge..." : "Position badge within frame"}
                       </p>
                     </div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Progressive Display - Intent Score Analysis */}
-            {(scanningStep === "intent" || scanningStep === "complete") && (
-              <div
-                className="space-y-4 animate-in slide-in-from-bottom-4 duration-700"
-                style={{ animationDelay: "0.6s" }}
-              >
-                <div className="flex items-center gap-2 text-sm font-medium text-orange-600 mb-3">
-                  {scanningStep === "intent" ? (
-                    <div className="w-4 h-4 border-2 border-orange-600 border-t-transparent rounded-full animate-spin"></div>
-                  ) : (
-                    <CheckCircle className="h-4 w-4" />
-                  )}
-                  Intent Score {scanningStep === "intent" ? "Calculating..." : "Calculated"}
-                </div>
-
-                {scanningStep === "intent" && (
-                  <div className="flex flex-col items-center justify-center space-y-6 py-8">
-                    <div className="relative">
-                      <div className="w-24 h-24 bg-purple-100 rounded-full flex items-center justify-center">
-                        <div className="text-purple-600 font-bold text-2xl animate-pulse">AI</div>
-                      </div>
-                      <div className="absolute -inset-4 border-2 border-purple-200 rounded-full animate-ping opacity-30"></div>
-                    </div>
-                    <div className="text-center space-y-2">
-                      <p className="text-lg font-medium">Intent Score Analysis</p>
-                      <p className="text-sm text-gray-500">Calculating buying intent signals...</p>
-                    </div>
-                    <div className="w-full max-w-sm space-y-2">
-                      <div className="flex items-center gap-2 text-sm">
-                        <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce"></div>
-                        <span>Analyzing internal signals</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm">
-                        <div
-                          className="w-2 h-2 bg-purple-500 rounded-full animate-bounce"
-                          style={{ animationDelay: "0.1s" }}
-                        ></div>
-                        <span>Processing external data</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm">
-                        <div
-                          className="w-2 h-2 bg-purple-500 rounded-full animate-bounce"
-                          style={{ animationDelay: "0.2s" }}
-                        ></div>
-                        <span>Computing intent scores</span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {scanningStep === "complete" && (
-                  <div className="animate-in slide-in-from-bottom-4 duration-500">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="p-4 bg-orange-50 rounded-lg border border-orange-200 text-center">
-                        <div className="text-2xl font-bold text-orange-700 mb-1">78</div>
-                        <div className="text-sm font-medium text-orange-800">Internal Intent</div>
-                        <div className="text-xs text-orange-600 mt-1">High engagement signals</div>
-                      </div>
-
-                      <div className="p-4 bg-red-50 rounded-lg border border-red-200 text-center">
-                        <div className="text-2xl font-bold text-red-700 mb-1">65</div>
-                        <div className="text-sm font-medium text-red-800">External Intent</div>
-                        <div className="text-xs text-red-600 mt-1">Active research phase</div>
-                      </div>
-                    </div>
-
-                    <div className="p-3 bg-yellow-50 rounded-lg border border-yellow-200 mt-4">
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                        <span className="text-sm font-medium text-yellow-800">Recommendation</span>
-                      </div>
-                      <p className="text-sm text-yellow-700">
-                        High-priority lead. Schedule demo within 48 hours. Focus on cloud security and compliance
-                        benefits.
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Final Section - Interests and Save Button */}
-            {scanningStep === "complete" && scannedLead && (
-              <div
-                className="space-y-4 animate-in slide-in-from-bottom-4 duration-700"
-                style={{ animationDelay: "0.9s" }}
-              >
-                <div>
-                  <h4 className="font-medium mb-2">Key Interests</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {scannedLead.interests.map((interest, index) => (
-                      <Badge key={index} variant="secondary" className="bg-purple-100 text-purple-700">
-                        {interest}
-                      </Badge>
-                    ))}
                   </div>
                 </div>
 
                 <Button
-                  onClick={() => {
-                    setShowLeadScanner(false)
-                    setScannedLead(null)
-                    setScanningStep("scanning")
-                    showSuccessAnimation("Lead saved successfully!")
-                  }}
-                  className="w-full mt-6 bg-purple-600 hover:bg-purple-700"
+                  onClick={simulateCameraScan}
+                  disabled={isScanning}
+                  className="w-full max-w-sm bg-purple-600 hover:bg-purple-700"
                 >
-                  Save Enriched Lead
+                  {isScanning ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                      Scanning...
+                    </>
+                  ) : (
+                    <>
+                      <Scan className="h-4 w-4 mr-2" />
+                      Start Scan
+                    </>
+                  )}
                 </Button>
+              </div>
+            )}
+
+            {/* Contact Form */}
+            {(scanningStep === "form" || scanningStep === "enriching" || scanningStep === "complete") && (
+              <div className="space-y-4">
+                <div className="border border-gray-200 rounded-lg">
+                  <div className="p-4 bg-gray-50 border-b border-gray-200">
+                    <h3 className="font-medium text-gray-900">Contact Information</h3>
+                  </div>
+
+                  <div className="p-4 space-y-3">
+                    {/* Name */}
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 flex items-center justify-center">
+                        <User className="h-4 w-4 text-gray-500" />
+                      </div>
+                      <div className="flex-1">
+                        <input
+                          type="text"
+                          placeholder="Name"
+                          value={contactForm.name}
+                          onChange={(e) => setContactForm((prev) => ({ ...prev, name: e.target.value }))}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Role */}
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 flex items-center justify-center">
+                        <Briefcase className="h-4 w-4 text-gray-500" />
+                      </div>
+                      <div className="flex-1">
+                        <input
+                          type="text"
+                          placeholder="Role"
+                          value={contactForm.role}
+                          onChange={(e) => setContactForm((prev) => ({ ...prev, role: e.target.value }))}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Email */}
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 flex items-center justify-center relative">
+                        <Mail
+                          className={cn(
+                            "h-4 w-4 transition-all duration-300",
+                            enrichingField === "email"
+                              ? "text-purple-500 animate-pulse"
+                              : contactForm.email
+                                ? "text-purple-500"
+                                : "text-gray-500",
+                          )}
+                        />
+                        {enrichingField === "email" && (
+                          <div className="absolute -inset-1 border border-purple-300 rounded-full animate-ping"></div>
+                        )}
+                      </div>
+                      <div className="flex-1 relative">
+                        <input
+                          type="email"
+                          placeholder="Email"
+                          value={contactForm.email}
+                          onChange={(e) => setContactForm((prev) => ({ ...prev, email: e.target.value }))}
+                          className={cn(
+                            "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm transition-all duration-300",
+                            enrichingField === "email" && "ring-2 ring-purple-500 bg-purple-50 border-purple-300",
+                            contactForm.email && scanningStep === "complete" && "border-purple-300 bg-purple-50",
+                          )}
+                        />
+                        {enrichingField === "email" && (
+                          <div className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-purple-600 font-medium animate-pulse">
+                            Enriching...
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* LinkedIn */}
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 flex items-center justify-center relative">
+                        <div
+                          className={cn(
+                            "h-4 w-4 transition-all duration-300 flex items-center justify-center",
+                            enrichingField === "linkedin"
+                              ? "text-purple-500"
+                              : contactForm.linkedin
+                                ? "text-purple-500"
+                                : "text-gray-500",
+                          )}
+                        >
+                          <svg
+                            viewBox="0 0 24 24"
+                            className={cn("h-4 w-4 fill-current", enrichingField === "linkedin" && "animate-pulse")}
+                          >
+                            <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+                          </svg>
+                        </div>
+                        {enrichingField === "linkedin" && (
+                          <div className="absolute -inset-1 border border-purple-300 rounded-full animate-ping"></div>
+                        )}
+                      </div>
+                      <div className="flex-1 relative">
+                        <input
+                          type="text"
+                          placeholder="LinkedIn"
+                          value={contactForm.linkedin}
+                          onChange={(e) => setContactForm((prev) => ({ ...prev, linkedin: e.target.value }))}
+                          className={cn(
+                            "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm transition-all duration-300",
+                            enrichingField === "linkedin" && "ring-2 ring-purple-500 bg-purple-50 border-purple-300",
+                            contactForm.linkedin && scanningStep === "complete" && "border-purple-300 bg-purple-50",
+                          )}
+                        />
+                        {enrichingField === "linkedin" && (
+                          <div className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-purple-600 font-medium animate-pulse">
+                            Enriching...
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Company */}
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 flex items-center justify-center">
+                        <Building className="h-4 w-4 text-gray-500" />
+                      </div>
+                      <div className="flex-1">
+                        <input
+                          type="text"
+                          placeholder="Company"
+                          value={contactForm.company}
+                          onChange={(e) => setContactForm((prev) => ({ ...prev, company: e.target.value }))}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Industry */}
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 flex items-center justify-center relative">
+                        <Factory
+                          className={cn(
+                            "h-4 w-4 transition-all duration-300",
+                            enrichingField === "industry"
+                              ? "text-purple-500 animate-pulse"
+                              : contactForm.industry
+                                ? "text-purple-500"
+                                : "text-gray-500",
+                          )}
+                        />
+                        {enrichingField === "industry" && (
+                          <div className="absolute -inset-1 border border-purple-300 rounded-full animate-ping"></div>
+                        )}
+                      </div>
+                      <div className="flex-1 relative">
+                        <input
+                          type="text"
+                          placeholder="Industry"
+                          value={contactForm.industry}
+                          onChange={(e) => setContactForm((prev) => ({ ...prev, industry: e.target.value }))}
+                          className={cn(
+                            "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm transition-all duration-300",
+                            enrichingField === "industry" && "ring-2 ring-purple-500 bg-purple-50 border-purple-300",
+                            contactForm.industry && scanningStep === "complete" && "border-purple-300 bg-purple-50",
+                          )}
+                        />
+                        {enrichingField === "industry" && (
+                          <div className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-purple-600 font-medium animate-pulse">
+                            Enriching...
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Geography */}
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 flex items-center justify-center relative">
+                        <MapPin
+                          className={cn(
+                            "h-4 w-4 transition-all duration-300",
+                            enrichingField === "geography"
+                              ? "text-purple-500 animate-pulse"
+                              : contactForm.geography
+                                ? "text-purple-500"
+                                : "text-gray-500",
+                          )}
+                        />
+                        {enrichingField === "geography" && (
+                          <div className="absolute -inset-1 border border-purple-300 rounded-full animate-ping"></div>
+                        )}
+                      </div>
+                      <div className="flex-1 relative">
+                        <input
+                          type="text"
+                          placeholder="Geography"
+                          value={contactForm.geography}
+                          onChange={(e) => setContactForm((prev) => ({ ...prev, geography: e.target.value }))}
+                          className={cn(
+                            "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm transition-all duration-300",
+                            enrichingField === "geography" && "ring-2 ring-purple-500 bg-purple-50 border-purple-300",
+                            contactForm.geography && scanningStep === "complete" && "border-purple-300 bg-purple-50",
+                          )}
+                        />
+                        {enrichingField === "geography" && (
+                          <div className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-purple-600 font-medium animate-pulse">
+                            Enriching...
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Revenue */}
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 flex items-center justify-center relative">
+                        <DollarSign
+                          className={cn(
+                            "h-4 w-4 transition-all duration-300",
+                            enrichingField === "revenue"
+                              ? "text-purple-500 animate-pulse"
+                              : contactForm.revenue
+                                ? "text-purple-500"
+                                : "text-gray-500",
+                          )}
+                        />
+                        {enrichingField === "revenue" && (
+                          <div className="absolute -inset-1 border border-purple-300 rounded-full animate-ping"></div>
+                        )}
+                      </div>
+                      <div className="flex-1 relative">
+                        <input
+                          type="text"
+                          placeholder="Revenue"
+                          value={contactForm.revenue}
+                          onChange={(e) => setContactForm((prev) => ({ ...prev, revenue: e.target.value }))}
+                          className={cn(
+                            "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm transition-all duration-300",
+                            enrichingField === "revenue" && "ring-2 ring-purple-500 bg-purple-50 border-purple-300",
+                            contactForm.revenue && scanningStep === "complete" && "border-purple-300 bg-purple-50",
+                          )}
+                        />
+                        {enrichingField === "revenue" && (
+                          <div className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-purple-600 font-medium animate-pulse">
+                            Enriching...
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Enrich Button */}
+                {scanningStep === "form" && (
+                  <Button onClick={enrichContact} className="w-full bg-purple-600 hover:bg-purple-700">
+                    <div className="flex items-center justify-center gap-2">
+                      <div className="w-4 h-4 bg-purple-200 rounded-full flex items-center justify-center">
+                        <div className="w-2 h-2 bg-purple-600 rounded-full"></div>
+                      </div>
+                      Enrich Contact
+                    </div>
+                  </Button>
+                )}
+
+                {/* Enriching Status */}
+                {scanningStep === "enriching" && (
+                  <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
+                    <div className="flex items-center gap-3">
+                      <div className="w-6 h-6 border-2 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
+                      <div>
+                        <p className="font-medium text-purple-800">Enriching Contact Data</p>
+                        <p className="text-sm text-purple-600">Using AI to find missing information...</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Save Button */}
+                {scanningStep === "complete" && (
+                  <Button
+                    onClick={() => {
+                      setShowLeadScanner(false)
+                      setScanningStep("camera")
+                      setContactForm({
+                        name: "",
+                        role: "",
+                        email: "",
+                        linkedin: "",
+                        company: "",
+                        industry: "",
+                        geography: "",
+                        revenue: "",
+                      })
+                      showSuccessAnimation("Contact saved successfully!")
+                    }}
+                    className="w-full bg-purple-600 hover:bg-purple-700"
+                  >
+                    Save Contact
+                  </Button>
+                )}
               </div>
             )}
           </div>
