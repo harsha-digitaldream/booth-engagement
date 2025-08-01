@@ -15,8 +15,6 @@ import {
   User,
   Building,
   Mail,
-  Phone,
-  MapPin,
   QrCode,
   Plus,
   Save,
@@ -150,6 +148,7 @@ export default function BoothDelight() {
   ])
   const [showVisitorsList, setShowVisitorsList] = useState(false)
   const [selectedRecipient, setSelectedRecipient] = useState("")
+  const [scanningStep, setScanningStep] = useState("scanning") // 'scanning', 'profile', 'pitch', 'intent', 'complete'
 
   const generateAvatar = (name) => {
     const names = name.split(" ")
@@ -219,12 +218,36 @@ export default function BoothDelight() {
 
   const handleLeadScan = () => {
     setShowLeadScanner(true)
+    setScanningStep("scanning")
     setIsScanning(true)
 
-    // Simulate scanning process
+    // Step 1: Badge Scanning (2 seconds)
     setTimeout(() => {
+      setScanningStep("profile")
+    }, 2000)
+
+    // Step 2: Profile Enrichment (3 seconds)
+    setTimeout(() => {
+      setScanningStep("pitch")
+    }, 5000)
+
+    // Step 3: Pitch Enrichment (3 seconds)
+    setTimeout(() => {
+      setScanningStep("intent")
+    }, 8000)
+
+    // Step 4: Intent Score Calculation (3 seconds)
+    setTimeout(() => {
+      setScanningStep("complete")
       setIsScanning(false)
-      setScannedLead(mockLeadData)
+      setScannedLead({
+        ...mockLeadData,
+        internalIntent: 78,
+        externalIntent: 65,
+        pitchRelevance: "High",
+        techStackMatch: "85%",
+        linkedinProfile: `linkedin.com/in/${mockLeadData.name.toLowerCase().replace(" ", "-")}`,
+      })
 
       // Add to visitors list if not already exists
       const existingVisitor = visitors.find((v) => v.email === mockLeadData.email)
@@ -248,10 +271,12 @@ export default function BoothDelight() {
           giftSent: false,
           scannedAt: new Date(),
           crmSynced: false,
+          internalIntent: 78,
+          externalIntent: 65,
         }
         setVisitors((prev) => [newVisitor, ...prev])
       }
-    }, 2000)
+    }, 11000)
   }
 
   const selectedMemberData = teamMembers.find((member) => member.id === selectedMember)
@@ -565,55 +590,235 @@ export default function BoothDelight() {
               <Scan className="h-5 w-5" />
               Lead Scanner
             </SheetTitle>
-            <SheetDescription>{isScanning ? "Scanning badge..." : "Lead information enriched"}</SheetDescription>
+            <SheetDescription>
+              {scanningStep === "scanning" && "Scanning badge..."}
+              {scanningStep === "profile" && "Enriching profile data..."}
+              {scanningStep === "pitch" && "Analyzing pitch relevance..."}
+              {scanningStep === "intent" && "Calculating intent scores..."}
+              {scanningStep === "complete" && "Lead analysis complete"}
+            </SheetDescription>
           </SheetHeader>
 
           <div className="mt-6 pb-6">
-            {isScanning ? (
+            {scanningStep === "scanning" ? (
               <div className="flex flex-col items-center justify-center space-y-4 py-12">
                 <div className="w-32 h-32 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin"></div>
                 <p className="text-lg font-medium">Scanning badge...</p>
                 <p className="text-sm text-gray-500">Please hold steady</p>
               </div>
-            ) : scannedLead ? (
-              <div className="space-y-4">
-                <div className="flex items-center gap-3 p-4 bg-purple-50 rounded-lg border border-purple-200">
-                  <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
-                    <User className="h-6 w-6 text-purple-600" />
+            ) : scanningStep === "profile" ? (
+              <div className="flex flex-col items-center justify-center space-y-6 py-8">
+                <div className="relative">
+                  <div className="w-24 h-24 bg-gradient-to-r from-purple-400 to-blue-500 rounded-full flex items-center justify-center animate-pulse">
+                    <User className="h-12 w-12 text-white" />
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-lg">{scannedLead.name}</h3>
-                    <p className="text-gray-600">{scannedLead.title}</p>
+                  <div className="absolute -inset-4 border-2 border-purple-300 rounded-full animate-ping opacity-75"></div>
+                </div>
+                <div className="text-center space-y-2">
+                  <p className="text-lg font-medium">Profile Enrichment</p>
+                  <p className="text-sm text-gray-500">Analyzing professional data...</p>
+                </div>
+                <div className="w-full max-w-sm space-y-2">
+                  <div className="flex items-center gap-2 text-sm">
+                    <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce"></div>
+                    <span>Extracting contact information</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <div
+                      className="w-2 h-2 bg-purple-500 rounded-full animate-bounce"
+                      style={{ animationDelay: "0.1s" }}
+                    ></div>
+                    <span>Enriching company details</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <div
+                      className="w-2 h-2 bg-purple-500 rounded-full animate-bounce"
+                      style={{ animationDelay: "0.2s" }}
+                    ></div>
+                    <span>Finding LinkedIn profile</span>
+                  </div>
+                </div>
+              </div>
+            ) : scanningStep === "pitch" ? (
+              <div className="flex flex-col items-center justify-center space-y-6 py-8">
+                <div className="relative">
+                  <div className="w-24 h-24 bg-gradient-to-r from-green-400 to-blue-500 rounded-full flex items-center justify-center animate-pulse">
+                    <Building className="h-12 w-12 text-white" />
+                  </div>
+                  <div className="absolute -inset-4 border-2 border-green-300 rounded-full animate-ping opacity-75"></div>
+                </div>
+                <div className="text-center space-y-2">
+                  <p className="text-lg font-medium">Pitch Enrichment</p>
+                  <p className="text-sm text-gray-500">Analyzing company fit and relevance...</p>
+                </div>
+                <div className="w-full max-w-sm space-y-2">
+                  <div className="flex items-center gap-2 text-sm">
+                    <div className="w-2 h-2 bg-green-500 rounded-full animate-bounce"></div>
+                    <span>Analyzing company tech stack</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <div
+                      className="w-2 h-2 bg-green-500 rounded-full animate-bounce"
+                      style={{ animationDelay: "0.1s" }}
+                    ></div>
+                    <span>Identifying pain points</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <div
+                      className="w-2 h-2 bg-green-500 rounded-full animate-bounce"
+                      style={{ animationDelay: "0.2s" }}
+                    ></div>
+                    <span>Matching solution relevance</span>
+                  </div>
+                </div>
+              </div>
+            ) : scanningStep === "intent" ? (
+              <div className="flex flex-col items-center justify-center space-y-6 py-8">
+                <div className="relative">
+                  <div className="w-24 h-24 bg-gradient-to-r from-orange-400 to-red-500 rounded-full flex items-center justify-center animate-pulse">
+                    <div className="text-white font-bold text-2xl">AI</div>
+                  </div>
+                  <div className="absolute -inset-4 border-2 border-orange-300 rounded-full animate-ping opacity-75"></div>
+                </div>
+                <div className="text-center space-y-2">
+                  <p className="text-lg font-medium">Intent Score Analysis</p>
+                  <p className="text-sm text-gray-500">Calculating buying intent signals...</p>
+                </div>
+                <div className="w-full max-w-sm space-y-2">
+                  <div className="flex items-center gap-2 text-sm">
+                    <div className="w-2 h-2 bg-orange-500 rounded-full animate-bounce"></div>
+                    <span>Analyzing internal signals</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <div
+                      className="w-2 h-2 bg-orange-500 rounded-full animate-bounce"
+                      style={{ animationDelay: "0.1s" }}
+                    ></div>
+                    <span>Processing external data</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <div
+                      className="w-2 h-2 bg-orange-500 rounded-full animate-bounce"
+                      style={{ animationDelay: "0.2s" }}
+                    ></div>
+                    <span>Computing intent scores</span>
+                  </div>
+                </div>
+              </div>
+            ) : scanningStep === "complete" && scannedLead ? (
+              <div className="space-y-6">
+                {/* Profile Information */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 text-sm font-medium text-purple-600 mb-3">
+                    <CheckCircle className="h-4 w-4" />
+                    Profile Enriched
+                  </div>
+
+                  <div className="flex items-center gap-4 p-4 bg-purple-50 rounded-lg border border-purple-200">
+                    <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center text-xl font-bold text-purple-700">
+                      {scannedLead.name
+                        .split(" ")
+                        .map((n) => n[0])
+                        .join("")}
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-lg">{scannedLead.name}</h3>
+                      <p className="text-gray-600">{scannedLead.title}</p>
+                      <p className="text-sm text-gray-500">{scannedLead.company}</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-3">
+                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                      <Mail className="h-5 w-5 text-gray-500" />
+                      <span className="text-sm">{scannedLead.email}</span>
+                    </div>
+
+                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                      <div className="h-5 w-5 text-gray-500 flex items-center justify-center">
+                        <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current">
+                          <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+                        </svg>
+                      </div>
+                      <span className="text-sm text-blue-600">
+                        linkedin.com/in/{scannedLead.name.toLowerCase().replace(" ", "-")}
+                      </span>
+                    </div>
                   </div>
                 </div>
 
-                <div className="space-y-3">
-                  <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                    <Building className="h-5 w-5 text-gray-500" />
-                    <span>{scannedLead.company}</span>
+                {/* Pitch Enrichment */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 text-sm font-medium text-green-600 mb-3">
+                    <CheckCircle className="h-4 w-4" />
+                    Pitch Enriched
                   </div>
 
-                  <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                    <Mail className="h-5 w-5 text-gray-500" />
-                    <span className="text-sm">{scannedLead.email}</span>
+                  <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+                    <h4 className="font-medium mb-2 text-green-800">Company Analysis</h4>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Tech Stack Match:</span>
+                        <span className="font-medium text-green-700">85% Compatible</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Solution Relevance:</span>
+                        <span className="font-medium text-green-700">High</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Pain Point Alignment:</span>
+                        <span className="font-medium text-green-700">Strong Match</span>
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                    <Phone className="h-5 w-5 text-gray-500" />
-                    <span>{scannedLead.phone}</span>
-                  </div>
-
-                  <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                    <MapPin className="h-5 w-5 text-gray-500" />
-                    <span>{scannedLead.location}</span>
+                  <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                    <p className="text-sm text-blue-800">
+                      <strong>Key Insight:</strong> {scannedLead.company} is actively expanding their cloud
+                      infrastructure. Our security solutions align perfectly with their current DevOps transformation.
+                    </p>
                   </div>
                 </div>
 
+                {/* Intent Scores */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 text-sm font-medium text-orange-600 mb-3">
+                    <CheckCircle className="h-4 w-4" />
+                    Intent Scores Calculated
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="p-4 bg-orange-50 rounded-lg border border-orange-200 text-center">
+                      <div className="text-2xl font-bold text-orange-700 mb-1">78</div>
+                      <div className="text-sm font-medium text-orange-800">Internal Intent</div>
+                      <div className="text-xs text-orange-600 mt-1">High engagement signals</div>
+                    </div>
+
+                    <div className="p-4 bg-red-50 rounded-lg border border-red-200 text-center">
+                      <div className="text-2xl font-bold text-red-700 mb-1">65</div>
+                      <div className="text-sm font-medium text-red-800">External Intent</div>
+                      <div className="text-xs text-red-600 mt-1">Active research phase</div>
+                    </div>
+                  </div>
+
+                  <div className="p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                      <span className="text-sm font-medium text-yellow-800">Recommendation</span>
+                    </div>
+                    <p className="text-sm text-yellow-700">
+                      High-priority lead. Schedule demo within 48 hours. Focus on cloud security and compliance
+                      benefits.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Interests */}
                 <div>
-                  <h4 className="font-medium mb-2">Interests</h4>
+                  <h4 className="font-medium mb-2">Key Interests</h4>
                   <div className="flex flex-wrap gap-2">
                     {scannedLead.interests.map((interest, index) => (
-                      <Badge key={index} variant="secondary">
+                      <Badge key={index} variant="secondary" className="bg-purple-100 text-purple-700">
                         {interest}
                       </Badge>
                     ))}
@@ -624,11 +829,12 @@ export default function BoothDelight() {
                   onClick={() => {
                     setShowLeadScanner(false)
                     setScannedLead(null)
+                    setScanningStep("scanning")
                     showSuccessAnimation("Lead saved successfully!")
                   }}
                   className="w-full mt-6 bg-purple-600 hover:bg-purple-700"
                 >
-                  Save Lead
+                  Save Enriched Lead
                 </Button>
               </div>
             ) : null}
