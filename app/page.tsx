@@ -24,6 +24,7 @@ import {
   CheckCircle,
   Send,
 } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 // Mock scanned lead data
 const mockLeadData = {
@@ -81,6 +82,61 @@ export default function BoothDelight() {
   ])
   const [editingMember, setEditingMember] = useState(null)
   const [newMember, setNewMember] = useState({ name: "", role: "", meetingLink: "" })
+  const [visitors, setVisitors] = useState([
+    // Mock data for demonstration
+    {
+      id: "1",
+      name: "Alex Thompson",
+      title: "VP of Engineering",
+      company: "TechCorp Solutions",
+      email: "alex.thompson@techcorp.com",
+      phone: "+1 (555) 123-4567",
+      location: "San Francisco, CA",
+      interests: ["AI/ML", "Cloud Infrastructure", "DevOps"],
+      avatar: "AT",
+      companyLogo: "/placeholder.svg?height=32&width=32&text=TC",
+      opportunityCost: "$50K",
+      abxIndicator: "High",
+      meetingBooked: true,
+      giftSent: false,
+      scannedAt: new Date("2025-01-08T10:30:00"),
+    },
+    {
+      id: "2",
+      name: "Sarah Chen",
+      title: "CTO",
+      company: "InnovateLabs",
+      email: "sarah.chen@innovatelabs.com",
+      phone: "+1 (555) 987-6543",
+      location: "Austin, TX",
+      interests: ["Cybersecurity", "Cloud Architecture"],
+      avatar: "SC",
+      companyLogo: "/placeholder.svg?height=32&width=32&text=IL",
+      opportunityCost: "$75K",
+      abxIndicator: "Medium",
+      meetingBooked: false,
+      giftSent: true,
+      scannedAt: new Date("2025-01-08T11:15:00"),
+    },
+    {
+      id: "3",
+      name: "Michael Rodriguez",
+      title: "Security Director",
+      company: "SecureNet Inc",
+      email: "m.rodriguez@securenet.com",
+      phone: "+1 (555) 456-7890",
+      location: "New York, NY",
+      interests: ["Zero Trust", "Threat Detection"],
+      avatar: "MR",
+      companyLogo: "/placeholder.svg?height=32&width=32&text=SN",
+      opportunityCost: "$100K",
+      abxIndicator: "High",
+      meetingBooked: true,
+      giftSent: true,
+      scannedAt: new Date("2025-01-08T09:45:00"),
+    },
+  ])
+  const [showVisitorsList, setShowVisitorsList] = useState(false)
 
   const generateAvatar = (name) => {
     const names = name.split(" ")
@@ -156,10 +212,53 @@ export default function BoothDelight() {
     setTimeout(() => {
       setIsScanning(false)
       setScannedLead(mockLeadData)
+
+      // Add to visitors list if not already exists
+      const existingVisitor = visitors.find((v) => v.email === mockLeadData.email)
+      if (!existingVisitor) {
+        const newVisitor = {
+          id: Date.now().toString(),
+          ...mockLeadData,
+          avatar: mockLeadData.name
+            .split(" ")
+            .map((n) => n[0])
+            .join(""),
+          companyLogo:
+            "/placeholder.svg?height=32&width=32&text=" +
+            mockLeadData.company
+              .split(" ")
+              .map((w) => w[0])
+              .join(""),
+          opportunityCost: "$" + (Math.floor(Math.random() * 100) + 25) + "K",
+          abxIndicator: ["High", "Medium", "Low"][Math.floor(Math.random() * 3)],
+          meetingBooked: false,
+          giftSent: false,
+          scannedAt: new Date(),
+        }
+        setVisitors((prev) => [newVisitor, ...prev])
+      }
     }, 2000)
   }
 
   const selectedMemberData = teamMembers.find((member) => member.id === selectedMember)
+
+  const handleSendGiftToVisitor = (visitorId) => {
+    setVisitors((prev) => prev.map((visitor) => (visitor.id === visitorId ? { ...visitor, giftSent: true } : visitor)))
+    showSuccessAnimation("Gift sent to visitor!")
+  }
+
+  const getABXColor = (indicator) => {
+    switch (indicator) {
+      case "High":
+        return "text-red-600 bg-red-50"
+      case "Medium":
+        return "text-yellow-600 bg-yellow-50"
+      case "Low":
+        return "text-green-600 bg-green-50"
+      default:
+        return "text-gray-600 bg-gray-50"
+    }
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100 p-4">
@@ -314,6 +413,18 @@ export default function BoothDelight() {
               </Button>
             </CardContent>
           </Card>
+        </div>
+
+        {/* Visitor Management Link */}
+        <div className="mt-8 pt-6 border-t border-gray-200">
+          <Button
+            onClick={() => setShowVisitorsList(true)}
+            variant="ghost"
+            className="w-full text-gray-600 hover:text-purple-600 hover:bg-purple-50"
+          >
+            <User className="h-4 w-4 mr-2" />
+            View Scanned Visitors ({visitors.length})
+          </Button>
         </div>
       </div>
 
@@ -672,6 +783,145 @@ export default function BoothDelight() {
 
             <Button onClick={() => setShowTeamManager(false)} variant="outline" className="w-full mt-6">
               Done
+            </Button>
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {/* Visitors List Sheet */}
+      <Sheet open={showVisitorsList} onOpenChange={setShowVisitorsList}>
+        <SheetContent side="bottom" className="h-[90vh] overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle className="flex items-center gap-2">
+              <User className="h-5 w-5" />
+              Scanned Visitors ({visitors.length})
+            </SheetTitle>
+            <SheetDescription>Manage and track all visitors scanned at your booth</SheetDescription>
+          </SheetHeader>
+
+          <div className="mt-6 space-y-4 pb-6">
+            {visitors.length === 0 ? (
+              <div className="text-center py-12">
+                <User className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-500">No visitors scanned yet</p>
+                <p className="text-sm text-gray-400">Start scanning badges to see visitors here</p>
+              </div>
+            ) : (
+              visitors.map((visitor) => (
+                <div key={visitor.id} className="bg-white border border-gray-200 rounded-lg p-4 space-y-3">
+                  {/* Header with Avatar and Basic Info */}
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center text-sm font-medium text-purple-700">
+                        {visitor.avatar}
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-lg">{visitor.name}</h3>
+                        <p className="text-gray-600">{visitor.title}</p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <img
+                            src={visitor.companyLogo || "/placeholder.svg"}
+                            alt={visitor.company}
+                            className="w-4 h-4"
+                          />
+                          <span className="text-sm text-gray-500">{visitor.company}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-sm text-gray-500">
+                        {visitor.scannedAt.toLocaleDateString()}{" "}
+                        {visitor.scannedAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Metrics Row */}
+                  <div className="flex items-center gap-4 py-2 border-t border-gray-100">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-gray-500">Opportunity:</span>
+                      <span className="font-medium text-green-600">{visitor.opportunityCost}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-gray-500">ABX:</span>
+                      <Badge className={cn("text-xs", getABXColor(visitor.abxIndicator))}>{visitor.abxIndicator}</Badge>
+                    </div>
+                  </div>
+
+                  {/* Actions Row */}
+                  <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+                    <div className="flex items-center gap-4">
+                      {/* Meeting Status */}
+                      <div className="flex items-center gap-2">
+                        <Calendar
+                          className={cn("h-4 w-4", visitor.meetingBooked ? "text-green-500" : "text-gray-300")}
+                        />
+                        <span className={cn("text-sm", visitor.meetingBooked ? "text-green-600" : "text-gray-400")}>
+                          {visitor.meetingBooked ? "Meeting Booked" : "No Meeting"}
+                        </span>
+                      </div>
+
+                      {/* Gift Status */}
+                      <div className="flex items-center gap-2">
+                        <Gift className={cn("h-4 w-4", visitor.giftSent ? "text-purple-500" : "text-gray-300")} />
+                        <span className={cn("text-sm", visitor.giftSent ? "text-purple-600" : "text-gray-400")}>
+                          {visitor.giftSent ? "Gift Sent" : "No Gift"}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Send Gift Button */}
+                    {!visitor.giftSent && (
+                      <Button
+                        onClick={() => handleSendGiftToVisitor(visitor.id)}
+                        size="sm"
+                        className="bg-purple-600 hover:bg-purple-700"
+                      >
+                        <Gift className="h-4 w-4 mr-1" />
+                        Send Gift
+                      </Button>
+                    )}
+                  </div>
+
+                  {/* Contact Info (Collapsible) */}
+                  <div className="pt-2 border-t border-gray-100">
+                    <div className="grid grid-cols-1 gap-2 text-sm">
+                      <div className="flex items-center gap-2 text-gray-600">
+                        <Mail className="h-3 w-3" />
+                        <span className="truncate">{visitor.email}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-gray-600">
+                        <Phone className="h-3 w-3" />
+                        <span>{visitor.phone}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-gray-600">
+                        <MapPin className="h-3 w-3" />
+                        <span>{visitor.location}</span>
+                      </div>
+                    </div>
+
+                    {/* Interests */}
+                    {visitor.interests && visitor.interests.length > 0 && (
+                      <div className="mt-2">
+                        <span className="text-xs text-gray-500 mb-1 block">Interests:</span>
+                        <div className="flex flex-wrap gap-1">
+                          {visitor.interests.map((interest, index) => (
+                            <Badge key={index} variant="secondary" className="text-xs">
+                              {interest}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          <div className="sticky bottom-0 bg-white pt-4 border-t">
+            <Button onClick={() => setShowVisitorsList(false)} variant="outline" className="w-full">
+              Close
             </Button>
           </div>
         </SheetContent>
