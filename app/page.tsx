@@ -808,63 +808,88 @@ export default function BoothDelight() {
               </div>
             ) : (
               visitors.map((visitor) => (
-                <div key={visitor.id} className="bg-white border border-gray-200 rounded-lg p-4 space-y-3">
+                <div key={visitor.id} className="bg-white border border-gray-200 rounded-lg p-3 space-y-2">
                   {/* Header with Avatar and Basic Info */}
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center text-sm font-medium text-purple-700">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center text-sm font-medium text-purple-700">
                         {visitor.avatar}
                       </div>
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-lg">{visitor.name}</h3>
-                        <p className="text-gray-600">{visitor.title}</p>
-                        <div className="flex items-center gap-2 mt-1">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-semibold text-base truncate">{visitor.name}</h3>
+                          <Badge className={cn("text-xs px-1.5 py-0.5", getABXColor(visitor.abxIndicator))}>
+                            {visitor.abxIndicator}
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-gray-600 truncate">{visitor.title}</p>
+                        <div className="flex items-center gap-1.5">
                           <img
                             src={visitor.companyLogo || "/placeholder.svg"}
                             alt={visitor.company}
-                            className="w-4 h-4"
+                            className="w-3 h-3"
                           />
-                          <span className="text-sm text-gray-500">{visitor.company}</span>
+                          <span className="text-xs text-gray-500 truncate">{visitor.company}</span>
+                          <span className="text-xs text-gray-400">•</span>
+                          <span className="text-xs text-green-600 font-medium">{visitor.opportunityCost}</span>
                         </div>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <div className="text-sm text-gray-500">
-                        {visitor.scannedAt.toLocaleDateString()}{" "}
-                        {visitor.scannedAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                      </div>
+                    <div className="text-right text-xs text-gray-400 whitespace-nowrap ml-2">
+                      {visitor.scannedAt.toLocaleDateString([], { month: "short", day: "numeric" })}
+                      <br />
+                      {visitor.scannedAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                     </div>
                   </div>
 
-                  {/* Metrics Row */}
-                  <div className="flex items-center gap-4 py-2 border-t border-gray-100">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-gray-500">Opportunity:</span>
-                      <span className="font-medium text-green-600">{visitor.opportunityCost}</span>
+                  {/* Contact Info Row */}
+                  <div className="flex items-center gap-3 text-xs text-gray-600 overflow-hidden">
+                    <div className="flex items-center gap-1 min-w-0 flex-1">
+                      <Mail className="h-3 w-3 shrink-0" />
+                      <span className="truncate">{visitor.email}</span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-gray-500">ABX:</span>
-                      <Badge className={cn("text-xs", getABXColor(visitor.abxIndicator))}>{visitor.abxIndicator}</Badge>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <Phone className="h-3 w-3" />
+                      <span className="whitespace-nowrap">{visitor.phone}</span>
                     </div>
+                  </div>
+
+                  {/* Location and Interests Row */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-1 text-xs text-gray-600">
+                      <MapPin className="h-3 w-3 shrink-0" />
+                      <span className="truncate">{visitor.location}</span>
+                    </div>
+
+                    {/* Interests */}
+                    {visitor.interests && visitor.interests.length > 0 && (
+                      <div className="flex flex-wrap gap-1">
+                        {visitor.interests.map((interest, index) => (
+                          <Badge key={index} variant="secondary" className="text-xs px-1.5 py-0.5 h-5">
+                            {interest}
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
                   {/* Actions Row */}
-                  <div className="flex items-center justify-between pt-2 border-t border-gray-100">
-                    <div className="flex items-center gap-4">
+                  <div className="flex items-center justify-between pt-1 border-t border-gray-100">
+                    <div className="flex items-center gap-3">
                       {/* Meeting Status */}
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1">
                         <Calendar
-                          className={cn("h-4 w-4", visitor.meetingBooked ? "text-green-500" : "text-gray-300")}
+                          className={cn("h-3.5 w-3.5", visitor.meetingBooked ? "text-green-500" : "text-gray-300")}
                         />
-                        <span className={cn("text-sm", visitor.meetingBooked ? "text-green-600" : "text-gray-400")}>
-                          {visitor.meetingBooked ? "Meeting Booked" : "No Meeting"}
+                        <span className={cn("text-xs", visitor.meetingBooked ? "text-green-600" : "text-gray-400")}>
+                          {visitor.meetingBooked ? "Meeting" : "No Meeting"}
                         </span>
                       </div>
 
                       {/* Gift Status */}
-                      <div className="flex items-center gap-2">
-                        <Gift className={cn("h-4 w-4", visitor.giftSent ? "text-purple-500" : "text-gray-300")} />
-                        <span className={cn("text-sm", visitor.giftSent ? "text-purple-600" : "text-gray-400")}>
+                      <div className="flex items-center gap-1">
+                        <Gift className={cn("h-3.5 w-3.5", visitor.giftSent ? "text-purple-500" : "text-gray-300")} />
+                        <span className={cn("text-xs", visitor.giftSent ? "text-purple-600" : "text-gray-400")}>
                           {visitor.giftSent ? "Gift Sent" : "No Gift"}
                         </span>
                       </div>
@@ -875,43 +900,11 @@ export default function BoothDelight() {
                       <Button
                         onClick={() => handleSendGiftToVisitor(visitor.id)}
                         size="sm"
-                        className="bg-purple-600 hover:bg-purple-700"
+                        className="bg-purple-600 hover:bg-purple-700 h-7 px-2 text-xs"
                       >
-                        <Gift className="h-4 w-4 mr-1" />
+                        <Gift className="h-3 w-3 mr-1" />
                         Send Gift
                       </Button>
-                    )}
-                  </div>
-
-                  {/* Contact Info (Collapsible) */}
-                  <div className="pt-2 border-t border-gray-100">
-                    <div className="grid grid-cols-1 gap-2 text-sm">
-                      <div className="flex items-center gap-2 text-gray-600">
-                        <Mail className="h-3 w-3" />
-                        <span className="truncate">{visitor.email}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-gray-600">
-                        <Phone className="h-3 w-3" />
-                        <span>{visitor.phone}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-gray-600">
-                        <MapPin className="h-3 w-3" />
-                        <span>{visitor.location}</span>
-                      </div>
-                    </div>
-
-                    {/* Interests */}
-                    {visitor.interests && visitor.interests.length > 0 && (
-                      <div className="mt-2">
-                        <span className="text-xs text-gray-500 mb-1 block">Interests:</span>
-                        <div className="flex flex-wrap gap-1">
-                          {visitor.interests.map((interest, index) => (
-                            <Badge key={index} variant="secondary" className="text-xs">
-                              {interest}
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
                     )}
                   </div>
                 </div>
